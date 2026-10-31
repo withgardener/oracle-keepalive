@@ -1,0 +1,40 @@
+[Unit]
+Description=oracle-keepalive (keep Oracle Always Free instance out of the idle bucket)
+Documentation=https://docs.oracle.com/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm
+After=network.target
+# No Wants/WantedBy on network-online: this must work on hosts without a network.
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/oracle-keepalive.conf
+ExecStart=/usr/bin/python3 /usr/local/lib/oracle-keepalive/oracle-keepalive.py run
+Restart=on-failure
+RestartSec=30
+
+# Be the politest thing on the box: idle scheduling class, low priority,
+# and the first process the OOM killer is allowed to take.
+Nice=19
+CPUSchedulingPolicy=idle
+IOSchedulingClass=idle
+OOMScoreAdjust=1000
+
+DynamicUser=yes
+StateDirectory=oracle-keepalive
+
+# Sandboxing. No network is needed at all; AF_UNIX only so the runtime works.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=
+TasksMax=64
+
+# Quota deliberately omitted: a burst is supposed to use a full core.
+
+[Install]
+WantedBy=multi-user.target

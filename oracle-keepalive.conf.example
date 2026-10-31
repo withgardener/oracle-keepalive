@@ -1,0 +1,52 @@
+# /etc/oracle-keepalive.conf
+#
+# All settings are optional. Every line is commented out, so an unmodified file
+# means "use the built-in defaults". Uncomment a line and edit the value to
+# override it. systemd does not support inline "#" comments after a value:
+# keep comments on their own line.
+#
+# Values that are out of range are clamped, and the daemon logs a warning.
+# Run `oracle-keepalive.py plan` to see the effective numbers before enabling.
+
+# What to keep alive: auto | cpu | mem | cpu+mem | off
+# auto -> cpu+mem on aarch64 (A1 shapes), cpu everywhere else (E2 Micro).
+# The memory half is always disabled on hosts with less than 2 GiB of RAM.
+#KEEPALIVE_MODE=auto
+
+# Fraction of wall time spent in CPU bursts. Range 0.06 .. 0.40, default 0.12.
+# Never lower than 0.06: the idle test needs more than 5% of the samples above
+# 20%, and the sampler in this repo cannot see how often Oracle samples.
+#KEEPALIVE_CPU_DUTY=0.12
+
+# Length of one burst in seconds. Range 60 .. 600, default 180.
+# Period = burst / duty, so 180 s at 0.12 gives one burst every 1500 s (~25 min).
+#KEEPALIVE_CPU_BURST_SECONDS=180
+
+# Number of worker processes per burst. Range 1 .. nproc, default ceil(nproc/2).
+#KEEPALIVE_CPU_WORKERS=1
+
+# Fraction of MemTotal that "used" memory should reach, counting our own hold.
+# Range 0.22 .. 0.40, default 0.25. 0.20 is Oracle's line, so stay above it.
+#KEEPALIVE_MEM_TARGET=0.25
+
+# Hard cap on our own hold, as a fraction of MemTotal. Range 0.05 .. 0.40, default 0.30.
+#KEEPALIVE_MEM_MAX_HOLD=0.30
+
+# Release everything immediately when MemAvailable/MemTotal drops below this.
+# Range 0.02 .. 0.50, default 0.10.
+#KEEPALIVE_MEM_FLOOR=0.10
+
+# Hysteresis: only change the hold when the desired value differs by more than
+# this many MB. Range 8 .. 1024, default 64. Growth is also limited to 256 MB per
+# tick; shrinking is immediate.
+#KEEPALIVE_MEM_STEP_MB=64
+
+# Memory loop interval in seconds. Range 1 .. 60, default 5.
+#KEEPALIVE_TICK_SECONDS=5
+
+# Sampler interval in seconds (one CSV row per sample). Range 10 .. 3600, default 60.
+#KEEPALIVE_SAMPLE_SECONDS=60
+
+# Where samples.csv, daemon.pid and heartbeat live.
+# The unit sets StateDirectory=oracle-keepalive, which is exactly this path.
+#KEEPALIVE_STATE_DIR=/var/lib/oracle-keepalive
