@@ -60,6 +60,23 @@ sudo ./install.sh --uninstall --purge
 
 安装脚本做的事（幂等，可重复执行）：装程序到 `/usr/local/lib/oracle-keepalive/`（root:root 0755）、单元到 `/etc/systemd/system/`、**仅在不存在时**写 `/etc/oracle-keepalive.conf`、按需写 `MemoryMax` drop-in、`daemon-reload` + `enable --now`、最多等 15 秒变 active、然后跑一次 `status`。它只装它旁边的文件，**从不下载任何东西**。
 
+### 一键安装（单文件安装器）
+
+仓库是私有的，所以没有匿名的 `curl | bash`。`make-bundle.sh` 会把全部文件打成**一个自解压脚本**（`dist/oracle-keepalive-installer.sh`）：脚本头里写着载荷的 SHA-256，运行时先校验再解包，然后把参数原样交给里面的 `install.sh`；**全程不联网**。
+
+```bash
+# 在有仓库访问权限的机器上构建（要求已提交，不允许带着本地改动打包）
+./make-bundle.sh
+
+# 在目标机器上：先看版本和校验值，再干跑，再安装
+bash oracle-keepalive-installer.sh --show-info
+sudo bash oracle-keepalive-installer.sh --dry-run
+sudo bash oracle-keepalive-installer.sh
+sudo bash oracle-keepalive-installer.sh --uninstall
+```
+
+注意：脚本里的 SHA-256 只能发现文件损坏或被截断，**不是签名**。以 root 运行之前，请把 `--show-info` 打印的 `file sha256` 与你**另外渠道**拿到的值核对一致。不要用管道方式运行（`curl ... | sudo bash`），它需要读自己的文件。
+
 ## 4. 它不做什么
 
 - **不产生网络流量。** 网络是第三个条件，但按文档的 AND 逻辑打破任意一个就够了，所以这里没做。如果你想要“第三条也破掉”的保险，需要另外的东西（比如定时的小流量），本项目不提供，也不会假装提供。

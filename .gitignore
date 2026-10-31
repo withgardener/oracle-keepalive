@@ -16,3 +16,4 @@ heartbeat
 .DS_Store
 *.swp
 *~
+dist/
